@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kordonowa Liga Wyścigowa - Taryfikator i Admin</title>
+    <style>
+        body {
+            background-color: #11141a;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid #333;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            letter-spacing: 2px;
+            color: #e0e0e0;
+        }
+        .admin-toggle {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+        }
+        .admin-toggle:hover:not(:disabled) {
+            background: #2980b9;
+        }
+        .admin-toggle.active {
+            background: #e74c3c;
+            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
+        }
+        .admin-toggle:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .logout-btn {
+            background: #7f8c8d;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            margin-top: 15px;
+            margin-left: 10px;
+            transition: all 0.3s ease;
+            display: none;
+        }
+        .logout-btn:hover {
+            background: #95a5a6;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .card {
+            background: #1e222b;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .card-header {
+            padding: 15px;
+            font-weight: bold;
+            font-size: 1.2em;
+            text-align: center;
+            color: #111;
+            text-transform: uppercase;
+        }
+        .card-body {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .rule-item {
+            background: #2a2f3a;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 4px solid transparent;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            position: relative;
+        }
+        .rule-title, .rule-penalty {
+            display: block;
+        }
+        .rule-title {
+            font-weight: bold;
+            color: #fff;
+        }
+        .rule-penalty {
+            color: #aaa;
+            font-size: 0.9em;
+        }
+        
+        .edit-input {
+            width: 100%;
+            background: #11141a;
+            border: 1px solid #555;
+            color: #fff;
+            padding: 8px;
+            border-radius: 4px;
+            font-family: inherit;
+            box-sizing: border-box;
+            font-size: 0.9em;
+        }
+        .edit-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .title-input {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .header-input {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1em;
+            text-transform: uppercase;
+            color: #fff;
+        }
+        
+        .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            padding: 2px 8px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        .delete-btn:hover { background: #c0392b; }
+
+        .add-rule-btn {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            padding: 10px;
+            font-weight: bold;
+            width: 100%;
+            margin-top: auto;
+            transition: 0.2s;
+        }
+        .add-rule-btn:hover { background: #27ae60; }
+
+        .cat-yellow .card-header { background: #f1c40f; }
+        .cat-yellow .rule-item { border-left-color: #f1c40f; }
+        
+        .cat-orange .card-header { background: #e67e22; }
+        .cat-orange .rule-item { border-left-color: #e67e22; }
+        
+        .cat-red .card-header { background: #e74c3c; }
+        .cat-red .rule-item { border-left-color: #e74c3c; }
+        
+        .cat-purple .card-header { background: #9b59b6; color: #fff; }
+        .cat-purple .rule-item { border-left-color: #9b59b6; }
+
+        .footer-limits {
+            max-width: 1400px;
+            margin: 40px auto 0;
+            background: #1e222b;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #3498db;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>KORDONOWA LIGA WYŚCIGOWA</h1>
+        <p>OFICJALNY TARYFIKATOR PRZEWINIEŃ</p>
+        <button class="admin-toggle" id="adminBtn" onclick="toggleAdmin()">ŁADOWANIE...</button>
+        <button class="logout-btn" id="logoutBtn" onclick="logoutAdmin()">WYLOGUJ</button>
+    </div>
+
+    <div class="grid-container" id="penaltyGrid">
+        <div class="card cat-yellow">
+            <div class="card-header"><span class="header-text">LEKKIE PRZEWINIENIA</span></div>
+            <div class="card-body">
+                <div class="rule-item">
+                    <span class="rule-title">Wypychanie poza tor</span>
+                    <span class="rule-penalty">3 sekundy oraz 1-3 PK</span>
+                </div>
+            </div>
+        </div>
+        <div class="card cat-orange">
+            <div class="card-header"><span class="header-text">ZAGROŻENIE NA TORZE</span></div>
+            <div class="card-body">
+                <div class="rule-item">
+                    <span class="rule-title">Niebezpieczna zmiana linii jazdy</span>
+                    <span class="rule-penalty">3-5 sekund oraz 1-5 PK</span>
+                </div>
+            </div>
+        </div>
+        <div class="card cat-red">
+            <div class="card-header"><span class="header-text">POWAŻNE INCYDENTY</span></div>
+            <div class="card-body">
+                <div class="rule-item">
+                    <span class="rule-title">Spowodowanie kolizji</span>
+                    <span class="rule-penalty">3-10 sekund oraz 1-5 PK</span>
+                </div>
+            </div>
+        </div>
+        <div class="card cat-purple">
+            <div class="card-header"><span class="header-text">KARY EKSTREMALNE</span></div>
+            <div class="card-body">
+                <div class="rule-item">
+                    <span class="rule-title">Rozpoczęcie sesji bez zgody hosta</span>
+                    <span class="rule-penalty">8 Punktów Karnych</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-limits">
+        <h2 style="margin-top:0; color: #3498db;">SYSTEM PUNKTÓW KARNYCH</h2>
+        <div style="display: flex; flex-wrap: wrap; gap: 20px;" id="limitsContainer">
+            <div class="limit-item" style="flex: 1; min-width: 200px;">
+                <span class="limit-pk" style="color: #f1c40f; font-weight: bold;">8 PK</span> - <span class="limit-desc">Ban na kwalifikacje</span>
+            </div>
+            <div class="limit-item" style="flex: 1; min-width: 200px;">
+                <span class="limit-pk" style="color: #e67e22; font-weight: bold;">16 PK</span> - <span class="limit-desc">Ban na wyścig</span>
+            </div>
+            <div class="limit-item" style="flex: 1; min-width: 200px;">
+                <span class="limit-pk" style="color: #e74c3c; font-weight: bold;">24 PK</span> - <span class="limit-desc">Ban na dwa wyścigi</span>
+            </div>
+            <div class="limit-item" style="flex: 1; min-width: 200px;">
+                <span class="limit-pk" style="color: #9b59b6; font-weight: bold;">32 PK</span> - <span class="limit-desc">Usunięcie z ligi</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isAdminMode = false;
+        
+        // Link do Twojej bazy danych Firebase z dopiskiem .json
+        const FIREBASE_URL = "https://regklw-default-rtdb.europe-west1.firebasedatabase.app/taryfikator.json";
+
+        // Inicjalizacja przy ładowaniu strony
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (localStorage.getItem('klw_admin_logged') === 'true') {
+                document.getElementById('logoutBtn').style.display = 'inline-block';
+            }
+            
+            await loadFromFirebase();
+            document.getElementById('adminBtn').innerText = "PANEL ADMINA";
+        });
+
+        // Pobieranie danych z bazy
+        async function loadFromFirebase() {
+            try {
+                const response = await fetch(FIREBASE_URL);
+                const data = await response.json();
+                
+                if (data) {
+                    // Renderowanie kart i reguł z bazy
+                    if (data.categories && data.categories.length > 0) {
+                        const grid = document.getElementById('penaltyGrid');
+                        grid.innerHTML = ''; 
+                        
+                        data.categories.forEach(cat => {
+                            let rulesHtml = '';
+                            if (cat.rules) {
+                                cat.rules.forEach(rule => {
+                                    rulesHtml += `
+                                        <div class="rule-item">
+                                            <span class="rule-title">${rule.title}</span>
+                                            <span class="rule-penalty">${rule.penalty}</span>
+                                        </div>
+                                    `;
+                                });
+                            }
+                            
+                            grid.innerHTML += `
+                                <div class="card ${cat.categoryClass}">
+                                    <div class="card-header"><span class="header-text">${cat.headerText}</span></div>
+                                    <div class="card-body">
+                                        ${rulesHtml}
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    // Renderowanie limitów z bazy
+                    if (data.limits && data.limits.length > 0) {
+                        const limitsContainer = document.getElementById('limitsContainer');
+                        limitsContainer.innerHTML = '';
+                        
+                        data.limits.forEach(limit => {
+                            limitsContainer.innerHTML += `
+                                <div class="limit-item" style="flex: 1; min-width: 200px;">
+                                    <span class="limit-pk" style="${limit.pkStyle}">${limit.pkText}</span> - <span class="limit-desc">${limit.descText}</span>
+                                </div>
+                            `;
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error("Błąd podczas pobierania danych z bazy: ", error);
+            }
+        }
+
+        // Zapisywanie danych do bazy
+        async function saveToFirebase() {
+            const payload = { categories: [], limits: [] };
+
+            // Zbieranie danych z kart
+            document.querySelectorAll('.card').forEach(card => {
+                const headerText = card.querySelector('.header-text').innerText;
+                const categoryClass = Array.from(card.classList).find(c => c.startsWith('cat-'));
+                
+                const rules = [];
+                card.querySelectorAll('.rule-item').forEach(item => {
+                    const title = item.querySelector('.rule-title').innerText;
+                    const penalty = item.querySelector('.rule-penalty').innerText;
+                    rules.push({ title, penalty });
+                });
+
+                payload.categories.push({ headerText, categoryClass, rules });
+            });
+
+            // Zbieranie danych z limitów
+            document.querySelectorAll('.limit-item').forEach(item => {
+                const pkSpan = item.querySelector('.limit-pk');
+                const pkText = pkSpan.innerText;
+                const pkStyle = pkSpan.getAttribute('style') || '';
+                const descText = item.querySelector('.limit-desc').innerText;
+                
+                payload.limits.push({ pkText, pkStyle, descText });
+            });
+
+            // Wysłanie zapytania PUT do Firebase
+            try {
+                await fetch(FIREBASE_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (error) {
+                console.error("Błąd podczas zapisu do bazy: ", error);
+                alert("Wystąpił problem z zapisem do bazy danych.");
+            }
+        }
+
+        // Funkcja wylogowania
+        function logoutAdmin() {
+            localStorage.removeItem('klw_admin_logged');
+            document.getElementById('logoutBtn').style.display = 'none';
+            
+            if (isAdminMode) {
+                toggleAdmin(); 
+            }
+            alert("Wylogowano pomyślnie.");
+        }
+
+        function addRule(btn) {
+            const newRule = document.createElement('div');
+            newRule.className = 'rule-item';
+            newRule.innerHTML = `
+                <button class="delete-btn" onclick="this.parentElement.remove()">X</button>
+                <input type="text" class="edit-input title-input" placeholder="Wpisz nazwę przewinienia" value="Nowe przewinienie">
+                <input type="text" class="edit-input penalty-input" placeholder="Wpisz karę" value="Brak kary">
+            `;
+            btn.parentNode.insertBefore(newRule, btn);
+        }
+
+        async function toggleAdmin() {
+            const btn = document.getElementById('adminBtn');
+
+            if (!isAdminMode) {
+                // WEJŚCIE W TRYB ADMINA
+                if (localStorage.getItem('klw_admin_logged') !== 'true') {
+                    const pass = prompt("Wprowadź hasło dostępu:");
+                    if (pass !== "klw2627") {
+                        alert("Odmowa dostępu. Wprowadzono błędne hasło.");
+                        return;
+                    }
+                    localStorage.setItem('klw_admin_logged', 'true');
+                    document.getElementById('logoutBtn').style.display = 'inline-block';
+                }
+
+                // Transformacja do pól edycji
+                document.querySelectorAll('.card').forEach(card => {
+                    const headerSpan = card.querySelector('.header-text');
+                    const headerText = headerSpan.innerText;
+                    headerSpan.innerHTML = `<input type="text" class="edit-input header-input" value="${headerText}">`;
+
+                    const cardBody = card.querySelector('.card-body');
+                    const rules = cardBody.querySelectorAll('.rule-item');
+                    
+                    rules.forEach(item => {
+                        const titleSpan = item.querySelector('.rule-title');
+                        const penaltySpan = item.querySelector('.rule-penalty');
+                        
+                        const titleText = titleSpan.innerText;
+                        const penaltyText = penaltySpan.innerText;
+                        
+                        item.innerHTML = `
+                            <button class="delete-btn" onclick="this.parentElement.remove()">X</button>
+                            <input type="text" class="edit-input title-input" value="${titleText}">
+                            <input type="text" class="edit-input penalty-input" value="${penaltyText}">
+                        `;
+                    });
+
+                    const addBtn = document.createElement('button');
+                    addBtn.className = 'add-rule-btn';
+                    addBtn.innerText = '+ Dodaj regułę';
+                    addBtn.onclick = function() { addRule(this); };
+                    cardBody.appendChild(addBtn);
+                });
+
+                document.querySelectorAll('.limit-item').forEach(item => {
+                    const pkSpan = item.querySelector('.limit-pk');
+                    const descSpan = item.querySelector('.limit-desc');
+                    const pkStyle = pkSpan.getAttribute('style') || '';
+                    
+                    item.innerHTML = `
+                        <input type="text" class="edit-input limit-pk-input" value="${pkSpan.innerText}" data-style="${pkStyle}" style="width: 30%; display: inline-block;"> - 
+                        <input type="text" class="edit-input limit-desc-input" value="${descSpan.innerText}" style="width: 60%; display: inline-block;">
+                    `;
+                });
+                
+                btn.innerText = "ZAPISZ ZMIANY";
+                btn.classList.add('active');
+                isAdminMode = true;
+
+            } else {
+                // WYJŚCIE Z TRYBU ADMINA I ZAPIS
+                
+                // 1. Wizualny zapis lokalny (przywracanie tekstu)
+                document.querySelectorAll('.card').forEach(card => {
+                    const headerSpan = card.querySelector('.header-text');
+                    const headerInput = headerSpan.querySelector('.header-input');
+                    headerSpan.innerHTML = headerInput.value;
+
+                    const cardBody = card.querySelector('.card-body');
+                    
+                    const addBtn = cardBody.querySelector('.add-rule-btn');
+                    if (addBtn) addBtn.remove();
+
+                    const rules = cardBody.querySelectorAll('.rule-item');
+                    rules.forEach(item => {
+                        const titleInput = item.querySelector('.title-input');
+                        const penaltyInput = item.querySelector('.penalty-input');
+                        
+                        const newTitle = titleInput.value;
+                        const newPenalty = penaltyInput.value;
+                        
+                        item.innerHTML = `
+                            <span class="rule-title">${newTitle}</span>
+                            <span class="rule-penalty">${newPenalty}</span>
+                        `;
+                    });
+                });
+
+                document.querySelectorAll('.limit-item').forEach(item => {
+                    const pkInput = item.querySelector('.limit-pk-input');
+                    const descInput = item.querySelector('.limit-desc-input');
+                    const pkStyle = pkInput.getAttribute('data-style');
+                    
+                    item.innerHTML = `
+                        <span class="limit-pk" style="${pkStyle}">${pkInput.value}</span> - <span class="limit-desc">${descInput.value}</span>
+                    `;
+                });
+                
+                // 2. Blokada przycisku i wysłanie do bazy
+                btn.innerText = "ZAPISYWANIE...";
+                btn.disabled = true;
+
+                await saveToFirebase();
+                
+                // 3. Po udanym zapisie
+                btn.innerText = "PANEL ADMINA";
+                btn.classList.remove('active');
+                btn.disabled = false;
+                isAdminMode = false;
+            }
+        }
+    </script>
+</body>
+</html>
