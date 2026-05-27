@@ -477,6 +477,19 @@
 
         .loading-msg { text-align: center; grid-column: 1/-1; padding: 40px; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 3px; font-size: 1.1rem; color: var(--col-muted); text-transform: uppercase; }
 
+        /* Ukryj nagłówek podczas ładowania */
+        .page-loading #siteHeader,
+        .page-loading .bg-panel,
+        .page-loading #sectionLabelDisplay,
+        .page-loading #sectionLabelEdit,
+        .page-loading .footer-limits {
+            visibility: hidden;
+            opacity: 0;
+        }
+        #siteHeader, .footer-limits {
+            transition: opacity 0.4s ease;
+        }
+
         @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
         .card:nth-child(1) { animation-delay: 0.05s; }
         .card:nth-child(2) { animation-delay: 0.10s; }
@@ -484,7 +497,7 @@
         .card:nth-child(4) { animation-delay: 0.20s; }
     </style>
 </head>
-<body>
+<body class="page-loading">
 
 <div id="bg-layer"></div>
 
@@ -735,6 +748,9 @@
     }
 
     function renderData(data) {
+        // Usuń klasę ładowania — pokaż nagłówek i stopkę
+        document.body.classList.remove('page-loading');
+
         // Background
         if (data.bg) {
             bgBase64  = data.bg.image || null;
@@ -1064,10 +1080,45 @@
             sectionLabel: 'Kategorie naruszeń',
             footerTitle:  'System Punktów Karnych',
             categories: [
-                { headerText: "LEKKIE PRZEWINIENIA",  categoryClass: "cat-yellow", icon: "⚠️", rules: [{title: "Wypychanie poza tor",              penalty: "3 sek. + 1–3 PK"}] },
-                { headerText: "ZAGROŻENIE NA TORZE",  categoryClass: "cat-orange", icon: "🚧", rules: [{title: "Niebezpieczna zmiana linii jazdy",  penalty: "3–5 sek."}]       },
-                { headerText: "POWAŻNE INCYDENTY",    categoryClass: "cat-red",    icon: "🚨", rules: [{title: "Spowodowanie kolizji",              penalty: "3–10 sek."}]      },
-                { headerText: "KARY EKSTREMALNE",     categoryClass: "cat-purple", icon: "💀", rules: [{title: "Użycie funkcji Powrót na tor",      penalty: "DSQ"}]            }
+                { headerText: "PRZEWINIENIA DROGOWE", categoryClass: "cat-yellow", icon: "⚠️", rules: [
+                    {title: "Brake check (nagłe, nieuzasadnione hamowanie)", penalty: "5–20s oraz 3–5 PK"},
+                    {title: "Zwiększanie czasu delta podczas VSC/SC", penalty: "3–5s oraz 1–5 PK"},
+                    {title: "Blokowanie w kwalifikacjach", penalty: "1–3 PK"},
+                    {title: "Wypychanie poza tor", penalty: "3s oraz 1–3 PK"},
+                    {title: "Nierespektowanie overlapu przez kierowcę z przodu", penalty: "1–3 PK"},
+                    {title: "Niebezpiecznie wolna jazda podczas restartu po SC", penalty: "1–3 PK"},
+                ]},
+                { headerText: "NIEBEZPIECZNA JAZDA", categoryClass: "cat-orange", icon: "🚧", rules: [
+                    {title: "Agresywny divebomb (atak z dużej odległości)", penalty: "3–10s oraz 1–6 PK"},
+                    {title: "Niebezpieczny powrót na tor", penalty: "3–10s oraz 1–5 PK"},
+                    {title: "Niebezpieczna zmiana linii jazdy", penalty: "3–5s oraz 1–5 PK"},
+                    {title: "Spowodowanie kolizji", penalty: "3–10s oraz 1–5 PK"},
+                    {title: "Przecięcie linii wjazdu/zjazdu do alei serwisowej", penalty: "3–5s oraz 1–2 PK"},
+                ]},
+                { headerText: "POWAŻNE INCYDENTY", categoryClass: "cat-red", icon: "🚨", rules: [
+                    {title: "Jazda na SI", penalty: "1–3 PK lub DSQ"},
+                    {title: "Celowe rozbicie bolidu (w tym na linii mety)", penalty: "3–8 PK"},
+                    {title: "Próba celowego wywołania SC", penalty: "Kara według uznania FIA"},
+                    {title: "Wycofanie się z sesji na torze", penalty: "6 PK"},
+                    {title: "Wyprzedzanie podczas okrążenia formującego", penalty: "Kara według uznania FIA"},
+                    {title: "Rozpoczęcie sesji bez zgody hosta", penalty: "8 PK"},
+                ]},
+                { headerText: "KARY EKSTREMALNE", categoryClass: "cat-purple", icon: "💀", rules: [
+                    {title: "Użycie funkcji „Powrót na tor"", penalty: "DSQ (z wyjątkami)"},
+                    {title: "Samosąd podczas zawodów", penalty: "Kara według uznania FIA"},
+                ]},
+                { headerText: "NIEOBECNOŚCI", categoryClass: "cat-blue", icon: "📋", rules: [
+                    {title: "Niestawienie się kierowcy podstawowego (po potwierdzeniu)", penalty: "3 PK"},
+                    {title: "Powtórne niestawienie się kierowcy podstawowego", penalty: "Degradacja do rezerwowego lub usunięcie"},
+                    {title: "Niestawienie się kierowcy rezerwowego (po potwierdzeniu)", penalty: "Czasowe odsunięcie od startów"},
+                    {title: "Nieobecność na 3 kolejnych lub 4 łącznie wydarzeniach", penalty: "Degradacja lub usunięcie z ligi"},
+                ]},
+                { headerText: "BŁĘDY GRY", categoryClass: "cat-green", icon: "🎮", rules: [
+                    {title: "Rażący błąd gry do 25% wyścigu – wznowienie", penalty: "Pola startowe wg kwalifikacji, wyścig 50%"},
+                    {title: "Rażący błąd gry 25–50% wyścigu – wznowienie", penalty: "Pola startowe wg miejsc, wyścig 35%"},
+                    {title: "Rażący błąd gry 50–75% wyścigu – wznowienie", penalty: "Pola startowe wg miejsc, wyścig 25%"},
+                    {title: "Rażący błąd gry powyżej 75% wyścigu", penalty: "Wyniki wg miejsc na ostatnim okrążeniu"},
+                ]},
             ],
             limits: [
                 { pkText: "8 PK",  pkStyle: "color:#f0c030;font-weight:bold;", descText: "Ban na kwalifikacje" },
