@@ -477,17 +477,9 @@
 
         .loading-msg { text-align: center; grid-column: 1/-1; padding: 40px; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 3px; font-size: 1.1rem; color: var(--col-muted); text-transform: uppercase; }
 
-        /* Ukryj nagłówek podczas ładowania */
-        .page-loading #siteHeader,
-        .page-loading .bg-panel,
-        .page-loading #sectionLabelDisplay,
-        .page-loading #sectionLabelEdit,
+        /* Ukryj stopkę podczas ładowania */
         .page-loading .footer-limits {
             visibility: hidden;
-            opacity: 0;
-        }
-        #siteHeader, .footer-limits {
-            transition: opacity 0.4s ease;
         }
 
         @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
@@ -729,26 +721,25 @@
     });
 
     async function loadFromFirebase() {
-        // Upewnij się, że DOM jest gotowy przed modyfikacją elementów
-        await new Promise(resolve => {
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', resolve, { once: true });
-            } else {
-                resolve();
-            }
-        });
         try {
-            const snapshot = await db.ref('taryfikator').once('value');
+            // Timeout 5s – jeśli Firebase nie odpowie, użyj domyślnych danych
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('timeout')), 5000)
+            );
+            const snapshot = await Promise.race([
+                db.ref('taryfikator').once('value'),
+                timeoutPromise
+            ]);
             const data = snapshot.val();
             data ? renderData(data) : renderDefaultStructure();
         } catch (error) {
-            const grid = document.getElementById('penaltyGrid');
-            if (grid) grid.innerHTML = '<p class="loading-msg">Błąd pobierania danych. Odśwież stronę.</p>';
+            // Brak połączenia lub timeout – renderuj domyślne dane z regulaminu
+            renderDefaultStructure();
         }
     }
 
     function renderData(data) {
-        // Usuń klasę ładowania — pokaż nagłówek i stopkę
+        // Usuń klasę ładowania — pokaż stopkę
         document.body.classList.remove('page-loading');
 
         // Background
