@@ -687,12 +687,21 @@
     });
 
     async function loadFromFirebase() {
+        // Upewnij się, że DOM jest gotowy przed modyfikacją elementów
+        await new Promise(resolve => {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', resolve, { once: true });
+            } else {
+                resolve();
+            }
+        });
         try {
             const snapshot = await db.ref('taryfikator').once('value');
             const data = snapshot.val();
             data ? renderData(data) : renderDefaultStructure();
         } catch (error) {
-            document.getElementById('penaltyGrid').innerHTML = '<p class="loading-msg">Błąd pobierania danych. Odśwież stronę.</p>';
+            const grid = document.getElementById('penaltyGrid');
+            if (grid) grid.innerHTML = '<p class="loading-msg">Błąd pobierania danych. Odśwież stronę.</p>';
         }
     }
 
@@ -717,23 +726,23 @@
 
         // Header
         if (data.header) {
-            document.getElementById('badgeDisplay').textContent  = data.header.badge    || '';
-            document.getElementById('badgeEdit').value           = data.header.badge    || '';
+            const _bd = document.getElementById('badgeDisplay'); if (_bd) _bd.textContent = data.header.badge || '';
+            const _be = document.getElementById('badgeEdit');    if (_be) _be.value        = data.header.badge || '';
             // title has two lines separated by \n
             const lines = (data.header.title || '').split('\n');
-            document.getElementById('titleDisplay').innerHTML    = lines[0] + (lines[1] ? '<br><em>' + lines[1] + '</em>' : '');
-            document.getElementById('titleLine1Edit').value      = lines[0] || '';
-            document.getElementById('titleLine2Edit').value      = lines[1] || '';
-            document.getElementById('subtitleDisplay').textContent = data.header.subtitle || '';
-            document.getElementById('subtitleEdit').value          = data.header.subtitle || '';
+            const _td = document.getElementById('titleDisplay');    if (_td) _td.innerHTML = lines[0] + (lines[1] ? '<br><em>' + lines[1] + '</em>' : '');
+            const _t1 = document.getElementById('titleLine1Edit');  if (_t1) _t1.value     = lines[0] || '';
+            const _t2 = document.getElementById('titleLine2Edit');  if (_t2) _t2.value     = lines[1] || '';
+            const _sd = document.getElementById('subtitleDisplay'); if (_sd) _sd.textContent = data.header.subtitle || '';
+            const _se = document.getElementById('subtitleEdit');    if (_se) _se.value       = data.header.subtitle || '';
         }
         if (data.sectionLabel !== undefined) {
-            document.getElementById('sectionLabelDisplay').textContent = data.sectionLabel;
-            document.getElementById('sectionLabelEdit').value          = data.sectionLabel;
+            const _sld = document.getElementById('sectionLabelDisplay'); if (_sld) _sld.textContent = data.sectionLabel;
+            const _sle = document.getElementById('sectionLabelEdit');    if (_sle) _sle.value       = data.sectionLabel;
         }
         if (data.footerTitle !== undefined) {
-            document.getElementById('footerTitleDisplay').textContent = data.footerTitle;
-            document.getElementById('footerTitleEdit').value          = data.footerTitle;
+            const _ftd = document.getElementById('footerTitleDisplay'); if (_ftd) _ftd.textContent = data.footerTitle;
+            const _fte = document.getElementById('footerTitleEdit');    if (_fte) _fte.value       = data.footerTitle;
         }
 
         // Cards
