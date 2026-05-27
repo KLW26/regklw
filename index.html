@@ -267,16 +267,25 @@
         // -------------------------------------------------------------------------
         // 1. TUTAJ WKLEJ SWOJĄ KONFIGURACJĘ Z FIREBASE (Project Settings -> Your Apps)
         // -------------------------------------------------------------------------
-        const firebaseConfig = {
+        const firebaseKonfiguracja = {
+
             apiKey: "AIzaSyDB5lU3ECJLdSQ5f5kl-Ex5_cktVrBdD4o",
-            authDomain: "regklw.firebaseapp.com",
+
+            AuthDomaina: "regklw.firebaseapp.com",
+
             databaseURL: "https://regklw-default-rtdb.europe-west1.firebasedatabase.app",
+
             projectId: "regklow",
-            storageBucket: "regklw.firebasestorage.app",
-            messagingSenderId: "216737822642",
-            appId: "1:216737822642:web:1b045443445f19db9fd6ab",
-            measurementId: "G-CNQNEWGS58"
-        };
+
+            magazynbucket: "regklw.firebasestore.app",
+
+            wiadomościSenderId: "216737822642",
+
+            appId: "1:216737822642:web:1b04543445f19db9fd6ab",
+
+            pomiarId: "G-CNQNEWGS58"
+
+       };
 
         // Inicjalizacja Firebase
         firebase.initializeApp(firebaseConfig);
